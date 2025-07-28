@@ -1,0 +1,122 @@
+// Prisma schema for AI Job Agent
+
+generator client {
+  provider = "prisma-client-py"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  resumes      Resume[]
+  applications Application[]
+  preferences  UserPreferences?
+  
+  @@map("users")
+}
+
+model Resume {
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
+  originalFilename String   @map("original_filename")
+  fileContent      Bytes    @map("file_content")
+  parsedContent    Json     @map("parsed_content")
+  embeddingId      String   @map("embedding_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications Application[]
+  
+  @@map("resumes")
+}
+
+model JobPost {
+  id          String   @id @default(cuid())
+  title       String
+  companyName String   @map("company_name")
+  jobUrl      String   @map("job_url")
+  location    Json
+  description String
+  requirements Json
+  salaryInfo  Json     @map("salary_info")
+  embeddingId String   @map("embedding_id")
+  scrapedAt   DateTime @default(now()) @map("scraped_at")
+  
+  applications Application[]
+  
+  @@map("job_posts")
+}
+
+model Application {
+  id                      String            @id @default(cuid())
+  userId                  String            @map("user_id")
+  jobPostId               String            @map("job_post_id")
+  resumeId                String            @map("resume_id")
+  status                  ApplicationStatus
+  matchScore              Float             @map("match_score")
+  customizedResumeContent String            @map("customized_resume_content")
+  coverLetterContent      String            @map("cover_letter_content")
+  applicationUrl          String?           @map("application_url")
+  appliedAt               DateTime          @default(now()) @map("applied_at")
+  lastStatusUpdate        DateTime          @updatedAt @map("last_status_update")
+  
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPost JobPost @relation(fields: [jobPostId], references: [id])
+  resume  Resume  @relation(fields: [resumeId], references: [id])
+  
+  @@map("applications")
+}
+
+model UserPreferences {
+  id              String   @id @default(cuid())
+  userId          String   @unique @map("user_id")
+  preferencesData Json     @map("preferences_data")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_preferences")
+}
+
+model LogEntry {
+  id                 String    @id @default(cuid())
+  timestamp          DateTime  @default(now())
+  level              String
+  activityType       String    @map("activity_type")
+  message            String
+  userId             String?   @map("user_id")
+  sessionId          String?   @map("session_id")
+  correlationId      String?   @map("correlation_id")
+  component          String
+  metadata           String?   // JSON string
+  errorDetails       String?   @map("error_details") // JSON string
+  performanceMetrics String?   @map("performance_metrics") // JSON string
+  
+  @@index([timestamp])
+  @@index([userId])
+  @@index([level])
+  @@index([activityType])
+  @@index([sessionId])
+  @@index([correlationId])
+  @@map("log_entries")
+}
+
+enum ApplicationStatus {
+  PENDING
+  SUBMITTED
+  VIEWED
+  REJECTED
+  INTERVIEW_SCHEDULED
+  OFFER_RECEIVED
+  ACCEPTED
+  DECLINED
+}
