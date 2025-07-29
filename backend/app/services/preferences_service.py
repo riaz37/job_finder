@@ -33,10 +33,18 @@ class PreferencesService:
         # Create preferences
         db_preferences = await self.preferences_repo.create_preferences(user_id, preferences)
         
+        # Parse JSON string back to dictionary
+        import json
+        if isinstance(db_preferences.preferencesData, str):
+            preferences_dict = json.loads(db_preferences.preferencesData)
+        else:
+            # Fallback for existing data that might still be dict
+            preferences_dict = db_preferences.preferencesData
+
         return UserPreferences(
             id=db_preferences.id,
             user_id=db_preferences.userId,
-            preferences_data=UserPreferencesData(**db_preferences.preferencesData),
+            preferences_data=UserPreferencesData(**preferences_dict),
             created_at=db_preferences.createdAt,
             updated_at=db_preferences.updatedAt
         )
@@ -48,10 +56,18 @@ class PreferencesService:
         if not db_preferences:
             return None
         
+        # Parse JSON string back to dictionary
+        import json
+        if isinstance(db_preferences.preferencesData, str):
+            preferences_dict = json.loads(db_preferences.preferencesData)
+        else:
+            # Fallback for existing data that might still be dict
+            preferences_dict = db_preferences.preferencesData
+
         return UserPreferences(
             id=db_preferences.id,
             user_id=db_preferences.userId,
-            preferences_data=UserPreferencesData(**db_preferences.preferencesData),
+            preferences_data=UserPreferencesData(**preferences_dict),
             created_at=db_preferences.createdAt,
             updated_at=db_preferences.updatedAt
         )
@@ -78,10 +94,18 @@ class PreferencesService:
                 detail="User preferences not found"
             )
         
+        # Parse JSON string back to dictionary
+        import json
+        if isinstance(db_preferences.preferencesData, str):
+            preferences_dict = json.loads(db_preferences.preferencesData)
+        else:
+            # Fallback for existing data that might still be dict
+            preferences_dict = db_preferences.preferencesData
+
         return UserPreferences(
             id=db_preferences.id,
             user_id=db_preferences.userId,
-            preferences_data=UserPreferencesData(**db_preferences.preferencesData),
+            preferences_data=UserPreferencesData(**preferences_dict),
             created_at=db_preferences.createdAt,
             updated_at=db_preferences.updatedAt
         )

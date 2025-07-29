@@ -27,7 +27,7 @@ model Resume {
   id               String   @id @default(cuid())
   userId           String   @map("user_id")
   originalFilename String   @map("original_filename")
-  fileContent      Bytes    @map("file_content")
+  fileUrl          String   @map("file_url")
   parsedContent    Json     @map("parsed_content")
   embeddingId      String   @map("embedding_id")
   createdAt        DateTime @default(now()) @map("created_at")

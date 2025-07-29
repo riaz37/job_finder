@@ -10,6 +10,8 @@ from app.core.middleware import SecurityHeadersMiddleware, RateLimitMiddleware
 from app.api.v1.api import api_router
 from app.db.database import init_database, close_database
 from app.services.redis_service import redis_service
+from app.services.ai_service import ai_service
+from app.services.cloudinary_service import cloudinary_service
 
 
 @asynccontextmanager
@@ -19,6 +21,17 @@ async def lifespan(app: FastAPI):
     try:
         await init_database()
         await redis_service.connect()
+
+        # Initialize AI service if API key is available
+        if settings.GEMINI_API_KEY:
+            await ai_service.initialize()
+            print("AI service initialized")
+        else:
+            print("Warning: GEMINI_API_KEY not set, AI features will use fallback methods")
+
+        # Initialize Cloudinary service
+        await cloudinary_service.initialize()
+
         print("Application startup completed")
     except Exception as e:
         print(f"Startup failed: {e}")

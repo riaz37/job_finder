@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     # AI Services
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+
+    # Cloudinary (File Storage)
+    CLOUDINARY_CLOUD_NAME: str = os.getenv("CLOUDINARY_CLOUD_NAME", "")
+    CLOUDINARY_API_KEY: str = os.getenv("CLOUDINARY_API_KEY", "")
+    CLOUDINARY_API_SECRET: str = os.getenv("CLOUDINARY_API_SECRET", "")
     
     # Vector Database
     PINECONE_API_KEY: str = os.getenv("PINECONE_API_KEY", "")

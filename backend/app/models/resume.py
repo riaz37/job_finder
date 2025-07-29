@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 class ResumeBase(BaseModel):
     original_filename: str
+    file_url: str
 
 
 class ResumeCreate(ResumeBase):
@@ -52,11 +53,10 @@ class ResumeData(BaseModel):
 class ResumeInDB(ResumeBase):
     id: str
     user_id: str
-    file_content: bytes
     parsed_content: ParsedResumeContent
     embedding_id: str
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 

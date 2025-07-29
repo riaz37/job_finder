@@ -44,14 +44,20 @@ class JobRepository:
                 "salary_source": job_data.compensation.salary_source
             }
         
+        # Convert JSON fields to strings for Prisma
+        import json
+        location_json = json.dumps(location_data)
+        requirements_json = json.dumps(requirements_data)
+        salary_json = json.dumps(salary_data)
+
         return await self.db.jobpost.create({
             "title": job_data.title,
             "companyName": job_data.company_name or "Unknown",
             "jobUrl": job_data.job_url,
-            "location": location_data,
+            "location": location_json,
             "description": job_data.description or "",
-            "requirements": requirements_data,
-            "salaryInfo": salary_data,
+            "requirements": requirements_json,
+            "salaryInfo": salary_json,
             "embeddingId": embedding_id
         })
     

@@ -4,6 +4,7 @@ Resume processing service for file upload, parsing, and AI analysis
 import io
 import os
 import tempfile
+import logging
 from typing import Optional, Tuple, List
 import magic
 from fastapi import HTTPException, UploadFile
@@ -13,14 +14,16 @@ import json
 
 from app.models.resume import ParsedResumeContent, ResumeAnalysis
 from app.core.config import settings
-from app.services.ai_service import AIService
+from app.services.ai_service import ai_service
+
+logger = logging.getLogger(__name__)
 
 
 class ResumeService:
     """Service for handling resume upload, parsing, and analysis"""
     
     def __init__(self):
-        self.ai_service = AIService()
+        self.ai_service = ai_service
         self.allowed_mime_types = {
             'application/pdf': '.pdf',
             'application/msword': '.doc',
@@ -160,8 +163,13 @@ class ResumeService:
             Structured resume content
         """
         try:
-            # Use AI service to parse resume content
-            parsed_data = await self.ai_service.parse_resume_content(text_content)
+            # Use AI service to parse resume content if available
+            if self.ai_service.llm is not None:
+                parsed_data = await self.ai_service.parse_resume(text_content)
+            else:
+                # Fallback to basic parsing if AI service is not initialized
+                logger.warning("AI service not initialized, using fallback parsing")
+                parsed_data = await self.ai_service._fallback_parsing(text_content)
             
             return ParsedResumeContent(
                 personal_info=parsed_data.get('personal_info', {}),
@@ -194,7 +202,7 @@ class ResumeService:
             Resume analysis results
         """
         try:
-            analysis_data = await self.ai_service.analyze_resume(parsed_content.dict())
+            analysis_data = await self.ai_service.analyze_resume(parsed_content.model_dump())
             
             return ResumeAnalysis(
                 skills_extracted=analysis_data.get('skills_extracted', parsed_content.skills),

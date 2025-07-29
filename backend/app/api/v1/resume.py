@@ -11,6 +11,7 @@ from app.services.resume_service import resume_service
 from app.api.v1.auth import get_current_user
 from app.db.resume_repository import resume_repository
 from app.services.ai_service import ai_service
+from app.services.cloudinary_service import cloudinary_service
 
 router = APIRouter()
 security = HTTPBearer()
@@ -28,22 +29,37 @@ async def upload_resume(
     - Returns parsed resume data and analysis
     """
     try:
+        # Debug: Check if current_user is properly set
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not authenticated"
+            )
+        
+        print(f"DEBUG: Current user ID: {current_user.id}")
+        print(f"DEBUG: Current user email: {current_user.email}")
+        
         # Process the resume file
         raw_text, parsed_content = await resume_service.process_resume(file)
+        
+        print(f"DEBUG: Parsed content type: {type(parsed_content)}")
+        print(f"DEBUG: Parsed content: {parsed_content.model_dump()}")
         
         # For now, use a placeholder embedding ID
         # In a complete implementation, this would create an actual vector embedding
         embedding_id = f"embedding_{current_user.id}_{file.filename}"
         
-        # Read file content for storage
-        await file.seek(0)
-        file_content = await file.read()
+        # Upload file to Cloudinary
+        file_url = await cloudinary_service.upload_resume(file, current_user.id)
         
+        print(f"DEBUG: File URL: {file_url}")
+        print(f"DEBUG: About to create resume with user_id: {current_user.id}")
+
         # Store in database
         resume = await resume_repository.create_resume(
             user_id=current_user.id,
             original_filename=file.filename,
-            file_content=file_content,
+            file_url=file_url,
             parsed_content=parsed_content,
             embedding_id=embedding_id
         )
